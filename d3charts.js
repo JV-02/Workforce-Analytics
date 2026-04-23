@@ -28,7 +28,7 @@ function loadAndInit() {
     });
 
     // Load CSV via D3's built-in CSV parser
-    d3.csv('./dataset/Indian_Fresher_Salary_Skills_2025.csv').then(function(rawData) {
+    d3.csv('./Indian_Fresher_Salary_Skills_2025.csv').then(function(rawData) {
 
         // --- Type-cast numeric fields ---
         rawData.forEach(function(row) {
@@ -38,9 +38,16 @@ function loadAndInit() {
 
         // Store globally so Google Charts and CanvasJS modules can use it
         window.appData = rawData;
+        window.filteredData = rawData;
+
+        // Populate filters
+        populateFilters(rawData);
 
         // Update KPI stat cards
         updateKPICards(rawData);
+
+        // Update insights
+        updateInsights(rawData);
 
         // Signal to index.html that data is ready (Google Charts waits for this)
         if (typeof window.onDataReady === 'function') {
@@ -63,8 +70,105 @@ function loadAndInit() {
 }
 
 /* ---------------------------------------------------------- */
-/* KPI CARDS UPDATER                                         */
+/* FILTERS AND COMPARISON                                     */
 /* ---------------------------------------------------------- */
+function populateFilters(data) {
+    // Roles
+    const roles = [...new Set(data.map(d => d.role.trim()))].sort();
+    const roleFilter = document.getElementById('roleFilter');
+    const role1 = document.getElementById('role1');
+    const role2 = document.getElementById('role2');
+    roles.forEach(role => {
+        roleFilter.innerHTML += `<option value="${role}">${role}</option>`;
+        role1.innerHTML += `<option value="${role}">${role}</option>`;
+        role2.innerHTML += `<option value="${role}">${role}</option>`;
+    });
+
+    // Locations
+    const locations = [...new Set(data.map(d => d.city.trim()))].sort();
+    const locationFilter = document.getElementById('locationFilter');
+    locations.forEach(loc => {
+        locationFilter.innerHTML += `<option value="${loc}">${loc}</option>`;
+    });
+
+    // Event listeners
+    document.getElementById('applyFilters').addEventListener('click', applyFilters);
+    document.getElementById('resetFilters').addEventListener('click', resetFilters);
+    document.getElementById('compareBtn').addEventListener('click', compareRoles);
+}
+
+function applyFilters() {
+    const role = document.getElementById('roleFilter').value;
+    const location = document.getElementById('locationFilter').value;
+    const remote = document.getElementById('remoteFilter').value;
+
+    window.filteredData = window.appData.filter(d => {
+        return (!role || d.role.trim() === role) &&
+               (!location || d.city.trim() === location) &&
+               (!remote || d.remote.toString() === remote);
+    });
+
+    // Redraw all charts with filtered data
+    updateKPICards(window.filteredData);
+    updateInsights(window.filteredData);
+    drawGoogleCharts();
+    drawCanvasCharts();
+    drawD3Charts(window.filteredData);
+}
+
+function resetFilters() {
+    document.getElementById('roleFilter').value = '';
+    document.getElementById('locationFilter').value = '';
+    document.getElementById('remoteFilter').value = '';
+    window.filteredData = window.appData;
+    updateKPICards(window.filteredData);
+    updateInsights(window.filteredData);
+    drawGoogleCharts();
+    drawCanvasCharts();
+    drawD3Charts(window.filteredData);
+}
+
+function compareRoles() {
+    const role1 = document.getElementById('role1').value;
+    const role2 = document.getElementById('role2').value;
+    if (!role1 || !role2 || role1 === role2) {
+        alert('Please select two different roles.');
+        return;
+    }
+
+    const data = window.filteredData;
+    const stats1 = getRoleStats(data, role1);
+    const stats2 = getRoleStats(data, role2);
+
+    document.getElementById('compRole1').textContent = role1;
+    document.getElementById('compSal1').textContent = stats1.avgSal + ' LPA';
+    document.getElementById('compOffer1').textContent = stats1.offerRate + '%';
+    document.getElementById('compJobs1').textContent = stats1.total;
+    document.getElementById('compSkill1').textContent = stats1.topSkill;
+
+    document.getElementById('compRole2').textContent = role2;
+    document.getElementById('compSal2').textContent = stats2.avgSal + ' LPA';
+    document.getElementById('compOffer2').textContent = stats2.offerRate + '%';
+    document.getElementById('compJobs2').textContent = stats2.total;
+    document.getElementById('compSkill2').textContent = stats2.topSkill;
+
+    document.getElementById('comparisonGrid').style.display = 'grid';
+}
+
+function getRoleStats(data, role) {
+    const roleData = data.filter(d => d.role.trim() === role);
+    const total = roleData.length;
+    const offered = roleData.filter(d => parseInt(d.offer_made) === 1).length;
+    const offerRate = Math.round((offered / total) * 100);
+    const avgSal = (roleData.reduce((s, d) => s + d.salary_lpa, 0) / total).toFixed(1);
+    const skills = {};
+    roleData.forEach(d => {
+        const s = d.primary_skill.trim();
+        skills[s] = (skills[s] || 0) + 1;
+    });
+    const topSkill = Object.entries(skills).sort((a,b) => b[1] - a[1])[0][0];
+    return { total, offerRate, avgSal, topSkill };
+}
 function updateKPICards(data) {
     const total    = data.length;
     const offered  = data.filter(d => parseInt(d.offer_made) === 1).length;
@@ -94,6 +198,51 @@ function updateKPICards(data) {
     if (s2) animateCount(s2, offerRate, '%', '');
     if (s3) { setTimeout(() => { s3.textContent = '₹' + avgSalary + 'L'; }, 600); }
     if (s4) animateCount(s4, uniqueRoles, '', '');
+}
+
+/* ---------------------------------------------------------- */
+/* INSIGHTS UPDATER                                          */
+/* ---------------------------------------------------------- */
+function updateInsights(data) {
+    // Highest paying role
+    const salaries = {};
+    data.forEach(d => {
+        const role = d.role.trim();
+        if (!salaries[role]) salaries[role] = [];
+        salaries[role].push(d.salary_lpa);
+    });
+    const avgSalaries = Object.entries(salaries).map(([role, sals]) => ({
+        role,
+        avg: sals.reduce((a,b)=>a+b,0)/sals.length
+    })).sort((a,b)=>b.avg-a.avg);
+    const topRole = avgSalaries[0].role;
+    document.getElementById('ins-top-role').textContent = topRole;
+
+    // Most in-demand skills
+    const skills = {};
+    data.forEach(d => {
+        const s = d.primary_skill.trim();
+        skills[s] = (skills[s] || 0) + 1;
+    });
+    const topSkills = Object.entries(skills).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([s])=>s).join(' & ');
+    document.querySelector('.insight-card:nth-child(2) .insight-highlight').textContent = topSkills;
+
+    // Tech capital
+    const cities = {};
+    data.forEach(d => {
+        const c = d.city.trim();
+        cities[c] = (cities[c] || 0) + 1;
+    });
+    const topCity = Object.entries(cities).sort((a,b)=>b[1]-a[1])[0][0];
+    document.querySelector('.insight-card:nth-child(3) .insight-highlight').textContent = topCity;
+
+    // Internship advantage
+    const withIntern = data.filter(d => parseInt(d.internship_experience) === 1);
+    const withoutIntern = data.filter(d => parseInt(d.internship_experience) === 0);
+    const rateWith = withIntern.filter(d => parseInt(d.offer_made) === 1).length / withIntern.length;
+    const rateWithout = withoutIntern.filter(d => parseInt(d.offer_made) === 1).length / withoutIntern.length;
+    const advantage = Math.round((rateWith - rateWithout) * 100);
+    document.getElementById('ins-internship').textContent = '+' + advantage + '%';
 }
 
 /* ---------------------------------------------------------- */
@@ -375,9 +524,171 @@ function drawSkillsDemandChart(data) {
 }
 
 /* ---------------------------------------------------------- */
+/* CHART 3 : Salary Distribution Histogram — D3              */
+/* ---------------------------------------------------------- */
+function drawSalaryHistogram(data) {
+    const container = document.getElementById('salaryHistogram');
+    container.innerHTML = '';
+
+    const salaries = data.map(d => d.salary_lpa).filter(s => !isNaN(s));
+
+    const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+    const width = container.clientWidth || 400;
+    const height = 350;
+
+    const svg = d3.select('#salaryHistogram')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+
+    // Histogram bins
+    const histogram = d3.histogram()
+        .value(d => d)
+        .domain(d3.extent(salaries))
+        .thresholds(20);
+
+    const bins = histogram(salaries);
+
+    const x = d3.scaleLinear()
+        .domain([d3.min(bins, d => d.x0), d3.max(bins, d => d.x1)])
+        .range([0, innerW]);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(bins, d => d.length)])
+        .range([innerH, 0]);
+
+    // Bars
+    g.selectAll('.bar')
+        .data(bins)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('x', d => x(d.x0))
+        .attr('y', d => y(d.length))
+        .attr('width', d => x(d.x1) - x(d.x0) - 1)
+        .attr('height', d => innerH - y(d.length))
+        .attr('fill', '#00d4ff')
+        .attr('opacity', 0.8);
+
+    // Axes
+    g.append('g')
+        .attr('transform', `translate(0,${innerH})`)
+        .call(d3.axisBottom(x).ticks(10))
+        .call(gx => {
+            gx.select('.domain').attr('stroke', '#1a3a5c');
+            gx.selectAll('.tick line').attr('stroke', '#1a3a5c');
+            gx.selectAll('.tick text').attr('fill', '#8bacc8').attr('font-size', 10);
+        });
+
+    g.append('g')
+        .call(d3.axisLeft(y))
+        .call(gy => {
+            gy.select('.domain').attr('stroke', '#1a3a5c');
+            gy.selectAll('.tick line').attr('stroke', '#1a3a5c');
+            gy.selectAll('.tick text').attr('fill', '#8bacc8').attr('font-size', 10);
+        });
+
+    // Labels
+    g.append('text')
+        .attr('x', innerW / 2)
+        .attr('y', innerH + 35)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#8bacc8')
+        .attr('font-size', 12)
+        .text('Salary (LPA)');
+
+    g.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -innerH / 2)
+        .attr('y', -35)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#8bacc8')
+        .attr('font-size', 12)
+        .text('Number of Jobs');
+}
+
+/* ---------------------------------------------------------- */
+/* CHART 4 : Skills Demand Area Chart — D3                   */
+/* ---------------------------------------------------------- */
+function drawSkillsAreaChart(data) {
+    const container = document.getElementById('skillsAreaChart');
+    container.innerHTML = '';
+
+    // Area chart for offer rate by role
+    const roles = [...new Set(data.map(d => d.role.trim()))];
+    const roleStats = roles.map(role => {
+        const roleData = data.filter(d => d.role.trim() === role);
+        const offered = roleData.filter(d => parseInt(d.offer_made) === 1).length;
+        return { role, rate: offered / roleData.length };
+    }).sort((a,b) => a.rate - b.rate);
+
+    const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+    const width = container.clientWidth || 400;
+    const height = 350;
+
+    const svg = d3.select('#skillsAreaChart')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+
+    const x = d3.scaleBand()
+        .domain(roleStats.map(d => d.role))
+        .range([0, innerW])
+        .padding(0.1);
+
+    const y = d3.scaleLinear()
+        .domain([0, 1])
+        .range([innerH, 0]);
+
+    const area = d3.area()
+        .x(d => x(d.role) + x.bandwidth() / 2)
+        .y0(innerH)
+        .y1(d => y(d.rate));
+
+    g.append('path')
+        .datum(roleStats)
+        .attr('fill', '#00e5b3')
+        .attr('fill-opacity', 0.3)
+        .attr('stroke', '#00e5b3')
+        .attr('stroke-width', 2)
+        .attr('d', area);
+
+    // Axes
+    g.append('g')
+        .attr('transform', `translate(0,${innerH})`)
+        .call(d3.axisBottom(x))
+        .call(gx => {
+            gx.select('.domain').attr('stroke', '#1a3a5c');
+            gx.selectAll('.tick line').attr('stroke', '#1a3a5c');
+            gx.selectAll('.tick text').attr('fill', '#8bacc8').attr('font-size', 8).style('text-anchor', 'end').attr('transform', 'rotate(-45)');
+        });
+
+    g.append('g')
+        .call(d3.axisLeft(y).tickFormat(d => (d * 100) + '%'))
+        .call(gy => {
+            gy.select('.domain').attr('stroke', '#1a3a5c');
+            gy.selectAll('.tick line').attr('stroke', '#1a3a5c');
+            gy.selectAll('.tick text').attr('fill', '#8bacc8').attr('font-size', 10);
+        });
+}
+
+/* ---------------------------------------------------------- */
 /* drawD3Charts() — called after CSV loads                   */
 /* ---------------------------------------------------------- */
 function drawD3Charts(data) {
     drawOfferRateChart(data);
     drawSkillsDemandChart(data);
+    drawSalaryHistogram(data);
+    drawSkillsAreaChart(data);
 }
