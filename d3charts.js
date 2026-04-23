@@ -108,10 +108,18 @@ function applyFilters() {
                (!remote || d.remote.toString() === remote);
     });
 
-    // Redraw all charts with filtered data
+    // Update KPI cards and insights with filtered data
     updateKPICards(window.filteredData);
     updateInsights(window.filteredData);
-    drawGoogleCharts();
+
+    // Keep Google Charts (Overview) showing FULL dataset for market context
+    // Save current filtered state, temporarily use full data for charts, then restore
+    const tempFilteredData = window.filteredData;
+    window.filteredData = window.appData;
+    drawGoogleCharts();  // Overview charts stay on full market data
+    window.filteredData = tempFilteredData;  // Restore filtered data
+
+    // Analysis charts use filtered data
     drawCanvasCharts();
     drawD3Charts(window.filteredData);
 }
