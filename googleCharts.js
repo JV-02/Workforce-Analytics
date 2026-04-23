@@ -13,7 +13,7 @@
  * Google Charts API AND CSV data are ready.
  */
 function drawGoogleCharts() {
-    const data = window.appData;
+    const data = window.filteredData;
     drawRoleDistribution(data);
     drawCityDistribution(data);
     drawRemoteVsOnsite(data);
