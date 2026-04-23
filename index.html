@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         Workforce Trend & Job Market Analytics Dashboard
+         Course  : Data Visualization (3160717)
+         College : C K Pithawala College of Engineering & Technology
+         Dept    : Computer Engineering — CIPAT Project 2025-26
+         ============================================================ -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workforce Analytics Dashboard | DV CIPAT 2025-26</title>
+
+    <!-- Google Fonts: Syne (headings) + DM Sans (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Dashboard Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- ——— External Library CDNs ——— -->
+    <!-- 1. D3.js v7 — Used for CSV loading + custom SVG charts -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- 2. Google Charts API — Pie, Column charts -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <!-- 3. CanvasJS — Interactive animated charts -->
+    <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+</head>
+
+<body>
+
+<!-- ================================================================
+     NAVIGATION BAR
+     ================================================================ -->
+<nav class="navbar">
+    <div class="nav-brand">
+        <div class="brand-icon">📊</div>
+        <h1>Workforce <span>Analytics</span></h1>
+    </div>
+    <ul class="nav-links">
+        <li><a href="#section-overview">Overview</a></li>
+        <li><a href="#section-salary">Salary</a></li>
+        <li><a href="#section-skills">Skills</a></li>
+        <li><a href="#section-hiring">Hiring</a></li>
+        <li><a href="#section-insights">Insights</a></li>
+    </ul>
+    <span class="nav-badge">CIPAT 2025-26</span>
+</nav>
+
+<!-- ================================================================
+     HERO / PAGE HEADER
+     ================================================================ -->
+<header class="hero fade-in">
+    <div class="hero-label">Live Data · Indian Job Market 2025</div>
+    <h2>Workforce Trend &amp; <span class="highlight">Job Market</span><br>Analytics Dashboard</h2>
+    <p>
+        Visualizing fresher job market trends across India using
+        Google Charts, CanvasJS, and D3.js — powered by 250 real-world records.
+    </p>
+</header>
+
+<!-- ================================================================
+     KPI STATS CARDS
+     ================================================================ -->
+<section class="stats-grid fade-in-2">
+    <div class="stat-card cyan">
+        <div class="stat-icon">💼</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-label">Total Job Records</div>
+        <div class="stat-sub">Across 10 cities · 20 companies</div>
+    </div>
+    <div class="stat-card teal">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="stat-offer">—</div>
+        <div class="stat-label">Overall Offer Rate</div>
+        <div class="stat-sub">Candidates who received offers</div>
+    </div>
+    <div class="stat-card orange">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" id="stat-salary">—</div>
+        <div class="stat-label">Avg Salary (LPA)</div>
+        <div class="stat-sub">Across all roles &amp; companies</div>
+    </div>
+    <div class="stat-card purple">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-value" id="stat-roles">—</div>
+        <div class="stat-label">Job Roles Tracked</div>
+        <div class="stat-sub">From SE to Cloud Engineer</div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 1 — JOB MARKET OVERVIEW (Google Charts)
+     ================================================================ -->
+<section class="dashboard-section fade-in-3" id="section-overview">
+    <div class="section-header">
+        <span class="section-number">01</span>
+        <h3>Job Market Overview</h3>
+        <p>Powered by Google Charts API</p>
+    </div>
+
+    <div class="chart-grid-3">
+
+        <!-- Chart 1A: Role Distribution Donut -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Job Role Distribution</h4>
+                    <p>Breakdown by role category</p>
+                </div>
+                <span class="chart-tag tag-google">Google Charts</span>
+            </div>
+            <!-- Google Charts renders into this div -->
+            <div class="chart-container h-300" id="roleDistribution"></div>
+        </div>
+
+        <!-- Chart 1B: City Distribution Bar -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Top Job Locations</h4>
+                    <p>Cities with most fresher openings</p>
+                </div>
+                <span class="chart-tag tag-google">Google Charts</span>
+            </div>
+            <div class="chart-container h-300" id="cityDistribution"></div>
+        </div>
+
+        <!-- Chart 1C: Remote vs Onsite Pie -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Work Mode Split</h4>
+                    <p>Remote · Hybrid · Onsite</p>
+                </div>
+                <span class="chart-tag tag-google">Google Charts</span>
+            </div>
+            <div class="chart-container h-300" id="remoteVsOnsite"></div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 2 — SALARY ANALYSIS (CanvasJS)
+     ================================================================ -->
+<section class="dashboard-section" id="section-salary">
+    <div class="section-header">
+        <span class="section-number">02</span>
+        <h3>Salary Analysis</h3>
+        <p>Powered by CanvasJS</p>
+    </div>
+
+    <div class="chart-grid-2">
+
+        <!-- Chart 2A: Avg Salary by Role -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Average Salary by Job Role</h4>
+                    <p>In Lakhs Per Annum (LPA)</p>
+                </div>
+                <span class="chart-tag tag-canvas">CanvasJS</span>
+            </div>
+            <div class="chart-container h-350" id="salaryByRole"></div>
+        </div>
+
+        <!-- Chart 2B: Company Type Jobs -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Opportunities by Company Type</h4>
+                    <p>MNC · Startup · Product companies</p>
+                </div>
+                <span class="chart-tag tag-canvas">CanvasJS</span>
+            </div>
+            <div class="chart-container h-350" id="companyTypeJobs"></div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 3 — SKILLS DEMAND (D3.js)
+     ================================================================ -->
+<section class="dashboard-section" id="section-skills">
+    <div class="section-header">
+        <span class="section-number">03</span>
+        <h3>Skills in Demand</h3>
+        <p>Powered by D3.js</p>
+    </div>
+
+    <div class="chart-card chart-full">
+        <div class="chart-card-header">
+            <div>
+                <h4>Top 12 Primary Skills — Market Demand</h4>
+                <p>Based on job postings requiring each skill as primary requirement</p>
+            </div>
+            <span class="chart-tag tag-d3">D3.js</span>
+        </div>
+        <!-- D3 renders an SVG inside this div -->
+        <div class="chart-container h-420" id="skillsDemandChart"></div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 4 — HIRING PROCESS INSIGHTS (D3 + CanvasJS)
+     ================================================================ -->
+<section class="dashboard-section" id="section-hiring">
+    <div class="section-header">
+        <span class="section-number">04</span>
+        <h3>Hiring Process Insights</h3>
+        <p>D3.js · CanvasJS</p>
+    </div>
+
+    <div class="chart-grid-2">
+
+        <!-- Chart 4A: Offer Rate by Role (D3) -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Offer Rate by Job Role</h4>
+                    <p>% of candidates who received an offer</p>
+                </div>
+                <span class="chart-tag tag-d3">D3.js</span>
+            </div>
+            <!-- D3 appends SVG here -->
+            <div id="offerRateChart"></div>
+        </div>
+
+        <!-- Chart 4B: Interview Count Distribution (CanvasJS) -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Interview Rounds vs Offer Outcome</h4>
+                    <p>Stacked: offer made vs no offer, by round count</p>
+                </div>
+                <span class="chart-tag tag-canvas">CanvasJS</span>
+            </div>
+            <div class="chart-container h-350" id="interviewDistribution"></div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 5 — KEY INSIGHTS
+     ================================================================ -->
+<section class="dashboard-section" id="section-insights">
+    <div class="section-header">
+        <span class="section-number">05</span>
+        <h3>Key Insights</h3>
+        <p>Derived from dataset analysis</p>
+    </div>
+
+    <div class="insights-grid">
+
+        <div class="insight-card">
+            <span class="insight-icon">🚀</span>
+            <span class="insight-highlight" id="ins-top-role">ML Engineer</span>
+            <div class="insight-title">Highest Paying Role</div>
+            <div class="insight-text">
+                ML Engineers and Cloud Engineers command the highest average salaries,
+                often exceeding ₹9–12 LPA even at fresher level due to niche skill demand.
+            </div>
+        </div>
+
+        <div class="insight-card">
+            <span class="insight-icon">💡</span>
+            <span class="insight-highlight">Python &amp; AWS</span>
+            <div class="insight-title">Most In-Demand Skills</div>
+            <div class="insight-text">
+                Python leads across Data, ML, and Backend roles. AWS dominates
+                in DevOps and Cloud. React is the top skill for frontend and full-stack positions.
+            </div>
+        </div>
+
+        <div class="insight-card">
+            <span class="insight-icon">🏢</span>
+            <span class="insight-highlight">Bangalore</span>
+            <div class="insight-title">Tech Capital of India</div>
+            <div class="insight-text">
+                Bangalore consistently leads in fresher job openings, followed by
+                Hyderabad and Pune. These 3 cities account for over 50% of all postings.
+            </div>
+        </div>
+
+        <div class="insight-card">
+            <span class="insight-icon">📈</span>
+            <span class="insight-highlight" id="ins-internship">+12%</span>
+            <div class="insight-title">Internship Advantage</div>
+            <div class="insight-text">
+                Freshers with prior internship experience have a significantly higher
+                offer rate compared to those without. Internship acts as a key differentiator
+                in competitive hiring processes.
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
+<footer>
+    <strong>Workforce Analytics Dashboard</strong> — Data Visualization CIPAT 2025-26<br>
+    C K Pithawala College of Engineering &amp; Technology · Computer Engineering Dept<br>
+    Course: 3160717 | Academic Year: 2025-26
+    <div class="footer-tags">
+        <span class="footer-tag">Google Charts API</span>
+        <span class="footer-tag">CanvasJS</span>
+        <span class="footer-tag">D3.js v7</span>
+        <span class="footer-tag">HTML5</span>
+        <span class="footer-tag">Indian Fresher Job Market Dataset</span>
+    </div>
+</footer>
+
+<!-- ================================================================
+     CHART MODULES (order matters!)
+     ================================================================ -->
+
+<!-- Step 1: Load our three chart module files -->
+<script src="js/googleCharts.js"></script>
+<script src="js/canvasCharts.js"></script>
+<script src="js/d3charts.js"></script>
+
+<!-- ================================================================
+     MAIN COORDINATOR SCRIPT
+     Handles: CSV loading + Google Charts API readiness sync
+     ================================================================ -->
+<script>
+    /**
+     * COORDINATION LOGIC
+     * ------------------
+     * Problem: We have TWO async operations that must BOTH finish
+     * before Google Charts can draw:
+     *   (A) Google Charts API must be loaded (via google.charts.load callback)
+     *   (B) CSV data must be parsed (via d3.csv promise)
+     *
+     * Solution: Use two flags. Only when BOTH are true, draw Google Charts.
+     * CanvasJS and D3 charts don't need Google Charts, so they draw immediately.
+     */
+
+    let googleReady = false;   // Flag: Google Charts API loaded?
+    let dataReady   = false;   // Flag: CSV data parsed?
+
+    /**
+     * Called when BOTH flags are true.
+     * Triggers Google Charts rendering.
+     */
+    function maybeDrawGoogleCharts() {
+        if (googleReady && dataReady) {
+            drawGoogleCharts();   // defined in googleCharts.js
+        }
+    }
+
+    // ——— Load Google Charts API ———
+    // Packages: 'corechart' covers Pie + Column charts
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(function() {
+        googleReady = true;
+        maybeDrawGoogleCharts();
+    });
+
+    // ——— Callback registered for when D3/CSV finishes ———
+    // (d3charts.js calls window.onDataReady() after parsing CSV)
+    window.onDataReady = function() {
+        dataReady = true;
+        maybeDrawGoogleCharts();
+    };
+
+    // ——— Start loading CSV data via D3 ———
+    // loadAndInit() is defined in d3charts.js
+    // It parses CSV → sets window.appData → calls onDataReady()
+    loadAndInit();
+
+    // ——— Re-render charts on window resize (responsive fix) ———
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            if (window.appData) {
+                drawGoogleCharts();    // Google Charts: re-draw
+                drawCanvasCharts();   // CanvasJS: re-draw
+                drawD3Charts(window.appData);  // D3: re-draw
+            }
+        }, 400);
+    });
+</script>
+
+</body>
+</html>
