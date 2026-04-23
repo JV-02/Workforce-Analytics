@@ -41,14 +41,19 @@
         <h1>Workforce <span>Analytics</span></h1>
     </div>
     <ul class="nav-links">
-        <li><a href="#section-overview">Overview</a></li>
-        <li><a href="#section-salary">Salary</a></li>
-        <li><a href="#section-skills">Skills</a></li>
-        <li><a href="#section-hiring">Hiring</a></li>
-        <li><a href="#section-insights">Insights</a></li>
+        <li><a href="#" data-target="section-overview">Overview</a></li>
+        <li><a href="#" data-target="section-salary">Salary</a></li>
+        <li><a href="#" data-target="section-skills">Skills</a></li>
+        <li><a href="#" data-target="section-hiring">Hiring</a></li>
+        <li><a href="#" data-target="section-comparison">Comparison</a></li>
+        <li><a href="#" data-target="section-advanced">Advanced</a></li>
+        <li><a href="#" data-target="section-insights">Insights</a></li>
     </ul>
-    <span class="nav-badge">CIPAT 2025-26</span>
 </nav>
+<main class="main-content">
+<div class="section-viewer">
+
+<section class="dashboard-section fade-in-3 active" id="section-overview">
 
 <!-- ================================================================
      HERO / PAGE HEADER
@@ -63,9 +68,41 @@
 </header>
 
 <!-- ================================================================
+     FILTERS SECTION
+     ================================================================ -->
+<div class="filters-section fade-in-2">
+    <div class="filters-grid">
+        <div class="filter-group">
+            <label for="roleFilter">Job Role:</label>
+            <select id="roleFilter">
+                <option value="">All Roles</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="locationFilter">Location:</label>
+            <select id="locationFilter">
+                <option value="">All Locations</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="remoteFilter">Work Mode:</label>
+            <select id="remoteFilter">
+                <option value="">All</option>
+                <option value="1">Remote</option>
+                <option value="0">Onsite</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <button id="applyFilters" class="filter-btn">Apply Filters</button>
+            <button id="resetFilters" class="filter-btn reset">Reset</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================
      KPI STATS CARDS
      ================================================================ -->
-<section class="stats-grid fade-in-2">
+<div class="stats-grid fade-in-2">
     <div class="stat-card cyan">
         <div class="stat-icon">💼</div>
         <div class="stat-value" id="stat-total">—</div>
@@ -90,12 +127,11 @@
         <div class="stat-label">Job Roles Tracked</div>
         <div class="stat-sub">From SE to Cloud Engineer</div>
     </div>
-</section>
+</div>
 
 <!-- ================================================================
      SECTION 1 — JOB MARKET OVERVIEW (Google Charts)
      ================================================================ -->
-<section class="dashboard-section fade-in-3" id="section-overview">
     <div class="section-header">
         <span class="section-number">01</span>
         <h3>Job Market Overview</h3>
@@ -303,6 +339,141 @@
 </section>
 
 <!-- ================================================================
+     JOB ROLE COMPARISON
+     ================================================================ -->
+<section class="dashboard-section" id="section-comparison">
+    <div class="section-header">
+        <span class="section-number">06</span>
+        <h3>Job Role Comparison</h3>
+        <p>Compare two roles side by side</p>
+    </div>
+
+    <div class="comparison-controls">
+        <div class="filter-group">
+            <label for="role1">Select Role 1:</label>
+            <select id="role1"></select>
+        </div>
+        <div class="filter-group">
+            <label for="role2">Select Role 2:</label>
+            <select id="role2"></select>
+        </div>
+        <div class="filter-group">
+            <button id="compareBtn" class="filter-btn">Compare</button>
+        </div>
+    </div>
+
+    <div class="comparison-grid" id="comparisonGrid" style="display: none;">
+        <div class="comparison-card">
+            <h4 id="compRole1">Role 1</h4>
+            <div class="comp-metric">
+                <span class="comp-label">Avg Salary:</span>
+                <span class="comp-value" id="compSal1">—</span>
+            </div>
+            <div class="comp-metric">
+                <span class="comp-label">Offer Rate:</span>
+                <span class="comp-value" id="compOffer1">—</span>
+            </div>
+            <div class="comp-metric">
+                <span class="comp-label">Total Jobs:</span>
+                <span class="comp-value" id="compJobs1">—</span>
+            </div>
+            <div class="comp-metric">
+                <span class="comp-label">Top Skill:</span>
+                <span class="comp-value" id="compSkill1">—</span>
+            </div>
+        </div>
+        <div class="comparison-card">
+            <h4 id="compRole2">Role 2</h4>
+            <div class="comp-metric">
+                <span class="comp-label">Avg Salary:</span>
+                <span class="comp-value" id="compSal2">—</span>
+            </div>
+            <div class="comp-metric">
+                <span class="comp-label">Offer Rate:</span>
+                <span class="comp-value" id="compOffer2">—</span>
+            </div>
+            <div class="comp-metric">
+                <span class="comp-label">Total Jobs:</span>
+                <span class="comp-value" id="compJobs2">—</span>
+            </div>
+            <div class="comp-metric">
+                <span class="comp-label">Top Skill:</span>
+                <span class="comp-value" id="compSkill2">—</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================================================================
+     ADVANCED VISUALIZATIONS
+     ================================================================ -->
+<section class="dashboard-section" id="section-advanced">
+    <div class="section-header">
+        <span class="section-number">07</span>
+        <h3>Advanced Visualizations</h3>
+        <p>Histogram, Line, Area, and Candle Charts</p>
+    </div>
+
+    <div class="chart-grid-2">
+
+        <!-- Chart 7A: Salary Distribution Histogram (D3) -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Salary Distribution</h4>
+                    <p>Histogram of LPA across all jobs</p>
+                </div>
+                <span class="chart-tag tag-d3">D3.js</span>
+            </div>
+            <div class="chart-container h-350" id="salaryHistogram"></div>
+        </div>
+
+        <!-- Chart 7B: Offer Rate Trend Line (CanvasJS) -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Offer Rate by Experience</h4>
+                    <p>Line chart: internship vs no internship</p>
+                </div>
+                <span class="chart-tag tag-canvas">CanvasJS</span>
+            </div>
+            <div class="chart-container h-350" id="offerRateTrend"></div>
+        </div>
+
+    </div>
+
+    <div class="chart-grid-2" style="margin-top: 2rem;">
+
+        <!-- Chart 7C: Skills Demand Area (D3) -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Skills Demand Over Roles</h4>
+                    <p>Area chart for top skills</p>
+                </div>
+                <span class="chart-tag tag-d3">D3.js</span>
+            </div>
+            <div class="chart-container h-350" id="skillsAreaChart"></div>
+        </div>
+
+        <!-- Chart 7D: Salary Range Candle (CanvasJS) -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h4>Salary Ranges by Role</h4>
+                    <p>Candle chart: min, max, avg</p>
+                </div>
+                <span class="chart-tag tag-canvas">CanvasJS</span>
+            </div>
+            <div class="chart-container h-350" id="salaryCandleChart"></div>
+        </div>
+
+    </div>
+</section>
+</div>
+</main>
+
+<!-- ================================================================
      FOOTER
      ================================================================ -->
 <footer>
@@ -323,9 +494,9 @@
      ================================================================ -->
 
 <!-- Step 1: Load our three chart module files -->
-<script src="js/googleCharts.js"></script>
-<script src="js/canvasCharts.js"></script>
-<script src="js/d3charts.js"></script>
+<script src="googleCharts.js"></script>
+<script src="canvasCharts.js"></script>
+<script src="d3charts.js"></script>
 
 <!-- ================================================================
      MAIN COORDINATOR SCRIPT
@@ -385,10 +556,62 @@
             if (window.appData) {
                 drawGoogleCharts();    // Google Charts: re-draw
                 drawCanvasCharts();   // CanvasJS: re-draw
-                drawD3Charts(window.appData);  // D3: re-draw
+                drawD3Charts(window.filteredData);  // D3: re-draw
             }
         }, 400);
     });
+
+    function redrawSectionCharts(sectionId) {
+        if (!window.appData) return;
+
+        // Only redraw visible charts to avoid rendering into hidden containers.
+        if (sectionId === 'section-overview') {
+            drawGoogleCharts();
+        }
+
+        if (sectionId === 'section-salary') {
+            if (typeof drawSalaryByRole === 'function') drawSalaryByRole(window.filteredData);
+            if (typeof drawCompanyTypeJobs === 'function') drawCompanyTypeJobs(window.filteredData);
+        }
+
+        if (sectionId === 'section-skills') {
+            if (typeof drawSkillsDemandChart === 'function') drawSkillsDemandChart(window.filteredData);
+        }
+
+        if (sectionId === 'section-hiring') {
+            if (typeof drawOfferRateChart === 'function') drawOfferRateChart(window.filteredData);
+            if (typeof drawInterviewDistribution === 'function') drawInterviewDistribution(window.filteredData);
+        }
+
+        if (sectionId === 'section-advanced') {
+            if (typeof drawSalaryHistogram === 'function') drawSalaryHistogram(window.filteredData);
+            if (typeof drawOfferRateTrend === 'function') drawOfferRateTrend(window.filteredData);
+            if (typeof drawSkillsAreaChart === 'function') drawSkillsAreaChart(window.filteredData);
+            if (typeof drawSalaryCandleChart === 'function') drawSalaryCandleChart(window.filteredData);
+        }
+    }
+
+    function activateSection(sectionId) {
+        document.querySelectorAll('.dashboard-section').forEach(function(section) {
+            section.classList.toggle('active', section.id === sectionId);
+        });
+        document.querySelectorAll('.nav-links a').forEach(function(link) {
+            link.classList.toggle('active', link.dataset.target === sectionId);
+        });
+
+        setTimeout(function() {
+            redrawSectionCharts(sectionId);
+        }, 120);
+    }
+
+    document.querySelectorAll('.nav-links a').forEach(function(link) {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            activateSection(link.dataset.target);
+        });
+    });
+
+    activateSection('section-overview');
 </script>
 
 </body>
