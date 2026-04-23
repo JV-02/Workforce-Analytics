@@ -474,22 +474,6 @@
 </main>
 
 <!-- ================================================================
-     FOOTER
-     ================================================================ -->
-<footer>
-    <strong>Workforce Analytics Dashboard</strong> — Data Visualization CIPAT 2025-26<br>
-    C K Pithawala College of Engineering &amp; Technology · Computer Engineering Dept<br>
-    Course: 3160717 | Academic Year: 2025-26
-    <div class="footer-tags">
-        <span class="footer-tag">Google Charts API</span>
-        <span class="footer-tag">CanvasJS</span>
-        <span class="footer-tag">D3.js v7</span>
-        <span class="footer-tag">HTML5</span>
-        <span class="footer-tag">Indian Fresher Job Market Dataset</span>
-    </div>
-</footer>
-
-<!-- ================================================================
      CHART MODULES (order matters!)
      ================================================================ -->
 
@@ -566,7 +550,11 @@
 
         // Only redraw visible charts to avoid rendering into hidden containers.
         if (sectionId === 'section-overview') {
+            // Keep Google Charts on full dataset for market context
+            const tempFilteredData = window.filteredData;
+            window.filteredData = window.appData;
             drawGoogleCharts();
+            window.filteredData = tempFilteredData;
         }
 
         if (sectionId === 'section-salary') {
