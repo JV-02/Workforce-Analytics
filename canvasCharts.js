@@ -12,10 +12,12 @@
  * Main entry point. Called after CSV data is loaded.
  */
 function drawCanvasCharts() {
-    const data = window.appData;
+    const data = window.filteredData;
     drawSalaryByRole(data);
     drawInterviewDistribution(data);
     drawCompanyTypeJobs(data);
+    drawOfferRateTrend(data);
+    drawSalaryCandleChart(data);
 }
 
 /* ---------------------------------------------------------- */
@@ -99,7 +101,121 @@ function drawSalaryByRole(data) {
     });
     chart.render();
 }
+/* ---------------------------------------------------------- */
+/* CHART 4 : Offer Rate Trend Line — CanvasJS                */
+/* ---------------------------------------------------------- */
+function drawOfferRateTrend(data) {
+    // Offer rate for internship vs no internship
+    const withIntern = data.filter(d => parseInt(d.internship_experience) === 1);
+    const withoutIntern = data.filter(d => parseInt(d.internship_experience) === 0);
 
+    const rateWith = withIntern.filter(d => parseInt(d.offer_made) === 1).length / withIntern.length * 100;
+    const rateWithout = withoutIntern.filter(d => parseInt(d.offer_made) === 1).length / withoutIntern.length * 100;
+
+    const dataPoints = [
+        { label: 'With Internship', y: rateWith },
+        { label: 'Without Internship', y: rateWithout }
+    ];
+
+    const chart = new CanvasJS.Chart('offerRateTrend', {
+        animationEnabled: true,
+        backgroundColor: 'transparent',
+        theme: 'dark2',
+        title: { text: '' },
+        axisX: {
+            labelFontFamily: 'DM Sans',
+            labelFontSize: 11,
+            labelFontColor: '#8bacc8',
+            lineColor: '#1a3a5c',
+            gridColor: 'transparent',
+        },
+        axisY: {
+            title: 'Offer Rate (%)',
+            titleFontFamily: 'DM Sans',
+            titleFontSize: 11,
+            titleFontColor: '#8bacc8',
+            labelFontFamily: 'DM Sans',
+            labelFontSize: 10,
+            labelFontColor: '#8bacc8',
+            gridColor: '#1a3a5c',
+            lineColor: '#1a3a5c',
+            suffix: '%',
+        },
+        toolTip: {
+            fontFamily: 'DM Sans',
+            fontSize: 13,
+            borderColor: '#1a3a5c',
+            backgroundColor: 'rgba(13,31,53,0.95)',
+            fontColor: '#e2ecf7',
+            content: '{label}: {y}%',
+        },
+        data: [{
+            type: 'line',
+            markerType: 'circle',
+            markerSize: 8,
+            lineThickness: 3,
+            color: '#00e5b3',
+            dataPoints: dataPoints
+        }]
+    });
+    chart.render();
+}
+
+/* ---------------------------------------------------------- */
+/* CHART 5 : Salary Range Candle Chart — CanvasJS            */
+/* ---------------------------------------------------------- */
+function drawSalaryCandleChart(data) {
+    // For each role, get min, max, avg
+    const roles = [...new Set(data.map(d => d.role.trim()))];
+    const dataPoints = roles.map(role => {
+        const salaries = data.filter(d => d.role.trim() === role).map(d => d.salary_lpa).filter(s => !isNaN(s));
+        const min = Math.min(...salaries);
+        const max = Math.max(...salaries);
+        const avg = salaries.reduce((a,b) => a+b, 0) / salaries.length;
+        return { label: role, y: [min, max, avg, avg] }; // For candle: open, high, low, close, but here min, max, avg, avg
+    });
+
+    const chart = new CanvasJS.Chart('salaryCandleChart', {
+        animationEnabled: true,
+        backgroundColor: 'transparent',
+        theme: 'dark2',
+        title: { text: '' },
+        axisX: {
+            labelFontFamily: 'DM Sans',
+            labelFontSize: 10,
+            labelFontColor: '#8bacc8',
+            lineColor: '#1a3a5c',
+            gridColor: 'transparent',
+        },
+        axisY: {
+            title: 'Salary (LPA)',
+            titleFontFamily: 'DM Sans',
+            titleFontSize: 11,
+            titleFontColor: '#8bacc8',
+            labelFontFamily: 'DM Sans',
+            labelFontSize: 10,
+            labelFontColor: '#8bacc8',
+            gridColor: '#1a3a5c',
+            lineColor: '#1a3a5c',
+        },
+        toolTip: {
+            fontFamily: 'DM Sans',
+            fontSize: 13,
+            borderColor: '#1a3a5c',
+            backgroundColor: 'rgba(13,31,53,0.95)',
+            fontColor: '#e2ecf7',
+            content: '{label}<br>Min: {y[0]}<br>Max: {y[1]}<br>Avg: {y[2]}',
+        },
+        data: [{
+            type: 'candlestick',
+            risingColor: '#00e5b3',
+            fallingColor: '#ff6b35',
+            color: '#00d4ff',
+            dataPoints: dataPoints
+        }]
+    });
+    chart.render();
+}
 /* ---------------------------------------------------------- */
 /* CHART 2 : Interview Count Distribution — Column Chart     */
 /* ---------------------------------------------------------- */
